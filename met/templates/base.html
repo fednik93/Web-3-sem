@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Металлолом-Эксперт{% endblock %}</title>
+    <style>
+        /* Сюда можно вынести общие стили для всех страниц */
+        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .btn { padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="{% url 'request_list' %}">Главная</a> |
+        <a href="{% url 'register' %}">Регистрация</a>
+    </nav>
+    <hr>
+
+    <main>
+        {% block content %}
+        <!-- Сюда будет подставляться код из других шаблонов -->
+        {% endblock %}
+    </main>
+
+    <footer style="margin-top: 50px; font-size: 0.8em;">
+        &copy; 2026 Металлолом-Эксперт
+    </footer>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="request-detail">
+    <h2>Заявка №{{ request_obj.id }}</h2>
+    <p><strong>Адрес:</strong> {{ request_obj.address|upper }}</p>
+    <p><strong>Статус:</strong> {{ request_obj.get_status_display }}</p>
+    <p><strong>Сумма:</strong> {{ request_obj.total_sum|floatformat:2 }} руб.</p>
+    
+    {% if request_obj.photo %}
+        <div class="photo-box">
+            <p>Фото объекта:</p>
+            <img src="{{ request_obj.photo.url }}" alt="Металлолом" style="max-width: 500px;">
+        </div>
+    {% endif %}
+
+    <hr>
+    <a href="{% url 'request_list' %}">← Вернуться к списку</a>
+</div>
+{% endblock %}
