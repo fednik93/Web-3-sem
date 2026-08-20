@@ -8,13 +8,16 @@ from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
 def request_list(request):
     queryset = Request.objects.select_related('user_id') \
-                              .prefetch_related('scrap_types') \
-                              .filter(user_id__username__icontains="Иван") \
-                              .exclude(status='completed') \
-                              .order_by('-total_sum')
+        .prefetch_related('scrap_types') \
+        .exclude(status='completed') \
+        .order_by('-total_sum')
+
+    name_query = request.GET.get('fio')
+    if name_query:
+        queryset = queryset.filter(user_id__fio__icontains=name_query)
 
     # Агрегирование: считаем общую сумму ТОЛЬКО для отфильтрованных заявок
-    total_revenue = queryset.aggregate(Sum('total_sum'))
+    total_revenue = queryset.aggregate(total=Sum('total_sum'))['total'] or 0
 
     # Пагинация (передаем наш оптимизированный и отфильтрованный queryset)
     paginator = Paginator(queryset, 5)
@@ -75,13 +78,12 @@ def login_view(request):
 def request_create(request):
     if request.method == 'POST':
         form = RequestForm(request.POST, request.FILES)
-        if form.is_value():
-            # commit=False означает: "Создай объект в памяти, но пока не пиши в БД"
-            # Это нужно, чтобы добавить данные, которых нет в самой форме (например, автора)
+        if form.is_valid():
+            user_id = request.session.get('user_id')
+            if not user_id:
+                return redirect('login')
             new_request = form.save(commit=False)
-            new_request.user_id = request.user  # Привязываем текущего юзера
-
-            # Теперь сохраняем окончательно в базу данных (commit=True по умолчанию)
+            new_request.user_id = get_object_or_404(User, pk=user_id)
             new_request.save()
             return redirect('request_list')
     else:
@@ -91,6 +93,8 @@ def request_create(request):
 
 # UPDATE (Редактирование)
 def request_edit(request, pk):
+    if not request.session.get('user_id'):
+        return redirect('login')
     request_obj = get_object_or_404(Request, pk=pk)
     if request.method == 'POST':
         form = RequestForm(request.POST, request.FILES, instance=request_obj)

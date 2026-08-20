@@ -30,15 +30,21 @@ class RequestForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Введите адрес объекта демонтажа'
             }),
-            'total_sum': forms.NumberInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Ожидаемая сумма'
-            }),
         }
 
     # 2. Пример clean_<fieldname>(): валидация конкретного поля
-    def clean_total_sum(self):
-        total_sum = self.cleaned_data.get('total_sum')
-        if total_sum is not None and total_sum < 0:
-            raise forms.ValidationError("Сумма заявки не может быть отрицательной!")
-        return total_sum
+    def clean_address(self):
+        address = self.cleaned_data.get('address')
+        if len(address.strip()) < 5:
+            raise forms.ValidationError("Укажите полный адрес (минимум 5 символов)")
+
+        # Проверка: нет ли уже активной (не завершённой/не отменённой) заявки по этому адресу
+        active_statuses = ['new', 'in_progress']
+        duplicate = Request.objects.filter(
+            address__iexact=address.strip(),
+            status__in=active_statuses
+        ).exists()
+        if duplicate:
+            raise forms.ValidationError("По этому адресу уже есть активная заявка")
+
+        return address
