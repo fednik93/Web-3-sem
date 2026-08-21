@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Обратная связь{% endblock %}
+{% block content %}
+<h2>Обратная связь</h2>
+
+{% if messages %}
+    {% for m in messages %}
+        <p style="color: green;">{{ m }}</p>
+    {% endfor %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    <div class="form-field">
+        {{ form.name.label_tag }}
+        {{ form.name }}
+        {{ form.name.errors }}
+    </div>
+
+    <div class="form-field">
+        {{ form.message.label_tag }}
+        {{ form.message }}
+        {{ form.message.errors }}
+    </div>
+
+    <button type="submit" class="btn">Отправить</button>
+</form>
+{% endblock %}

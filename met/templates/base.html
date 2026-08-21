@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Металлолом-Эксперт{% endblock %}</title>
+    {% block extra_head %}{% endblock %}
     <style>
         body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
         .btn { padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; }
@@ -13,7 +14,10 @@
         <a href="{% url 'home' %}">Главная</a> |
         <a href="{% url 'request_create' %}">Создать заявку</a> |
         <a href="{% url 'register' %}">Регистрация</a> |
-        <a href="{% url 'login' %}">Вход</a>
+        <a href="{% url 'login' %}">Вход</a> |
+        <a href="{% url 'category_list' %}">Категории</a> |
+        <a href="{% url 'feedback' %}">Обратная связь</a> |
+        <a href="{% url 'orm_demo' %}">ORM demo</a>
     </nav>
     <hr>
 

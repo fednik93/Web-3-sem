@@ -1,11 +1,98 @@
 from django.shortcuts import render, get_object_or_404
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Sum
-from .models import Request, User, Role
+from .models import Request, User, Role, Category, ScrapType, RequestPhoto
 from django.shortcuts import redirect
-from .forms import RegistrationForm, RequestForm
+from .forms import RegistrationForm, RequestForm, FeedbackForm, RequestPhotoForm, CategoryForm
 from django.contrib import messages
 from django.contrib.auth.hashers import make_password, check_password
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+def orm_demo(request):
+    # Chaining filters — фильтры цепочкой
+    chained = ScrapType.objects.filter(price_per_kg__gt=1).filter(category_id__title__icontains='метал')
+
+    # __icontains (без учёта регистра) и __contains (с учётом регистра, зависит от БД)
+    icontains_categories = Category.objects.filter(title__icontains='метал')
+    contains_categories = Category.objects.filter(title__contains='Метал')
+
+    # Limiting QuerySets — срез
+    limited_scrap_types = ScrapType.objects.order_by('-price_per_kg')[:3]
+
+    # values() / values_list()
+    values_result = ScrapType.objects.values('title', 'price_per_kg')[:5]
+    values_list_result = ScrapType.objects.values_list('title', flat=True)[:5]
+
+    # count(), exists() — быстрее, чем len(queryset) или if queryset
+    total_scrap_types = ScrapType.objects.count()
+    has_expensive = ScrapType.objects.filter(price_per_kg__gt=1000).exists()
+
+    updated_count = None
+    deleted_count = None
+    if request.method == 'POST':
+        if 'run_update' in request.POST:
+            # update() — массовое обновление одним SQL-запросом, без save() на каждом объекте
+            updated_count = Request.objects.filter(status='new').update(status='in_progress')
+        elif 'run_delete' in request.POST:
+            # delete() — массовое удаление отфильтрованного набора
+            deleted_info = RequestPhoto.objects.filter(photo='').delete()
+            deleted_count = deleted_info[0]
+        return HttpResponseRedirect(reverse('orm_demo'))
+
+    context = {
+        'chained': chained,
+        'icontains_categories': icontains_categories,
+        'contains_categories': contains_categories,
+        'limited_scrap_types': limited_scrap_types,
+        'values_result': values_result,
+        'values_list_result': values_list_result,
+        'total_scrap_types': total_scrap_types,
+        'has_expensive': has_expensive,
+        'updated_count': updated_count,
+        'deleted_count': deleted_count,
+    }
+    return render(request, 'orm_demo.html', context)
+# views.py
+def feedback(request):
+    if request.method == 'POST':
+        form = FeedbackForm(request.POST)
+        if form.is_valid():
+            # form.cleaned_data — доступ к провалидированным и приведённым к типу данным
+            name = form.cleaned_data['name']
+            message = form.cleaned_data['message']
+            messages.success(request, f"Спасибо, {name}! Ваше сообщение принято.")
+            return HttpResponseRedirect(reverse('feedback'))  # HttpResponseRedirect вместо shortcuts.redirect
+    else:
+        form = FeedbackForm()
+    return render(request, 'feedback.html', {'form': form})
+def request_photo_upload(request, pk):
+    request_obj = get_object_or_404(Request, pk=pk)
+    if request.method == 'POST':
+        form = RequestPhotoForm(request.POST, request.FILES)  # request.FILES обязателен для файловых полей
+        if form.is_valid():
+            photo = form.save(commit=False)
+            photo.request_id = request_obj
+            photo.save()
+            return HttpResponseRedirect(reverse('request_detail', args=[pk]))
+    else:
+        form = RequestPhotoForm()
+    return render(request, 'request_photo_form.html', {'form': form, 'request_obj': request_obj})
+
+
+def category_list(request):
+    categories = Category.objects.all()
+    return render(request, 'category_list.html', {'categories': categories})
+
+
+def category_create(request):
+    if request.method == 'POST':
+        form = CategoryForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return HttpResponseRedirect(reverse('category_list'))
+    else:
+        form = CategoryForm()
+    return render(request, 'category_form.html', {'form': form})
 def request_list(request):
     queryset = Request.objects.select_related('user_id') \
         .prefetch_related('scrap_types') \

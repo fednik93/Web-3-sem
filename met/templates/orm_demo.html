@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}ORM demo{% endblock %}
+{% block content %}
+<h2>Демонстрация методов ORM</h2>
+
+<h3>Chaining filters (filter().filter())</h3>
+<ul>
+    {% for s in chained %}
+        <li>{{ s.title }} — {{ s.price_per_kg }} руб./кг</li>
+    {% empty %}
+        <li>Нет результатов</li>
+    {% endfor %}
+</ul>
+
+<h3>__icontains (без учёта регистра)</h3>
+<ul>
+    {% for c in icontains_categories %}
+        <li>{{ c.title }}</li>
+    {% empty %}
+        <li>Нет результатов</li>
+    {% endfor %}
+</ul>
+
+<h3>__contains (с учётом регистра)</h3>
+<ul>
+    {% for c in contains_categories %}
+        <li>{{ c.title }}</li>
+    {% empty %}
+        <li>Нет результатов (регистр не совпал)</li>
+    {% endfor %}
+</ul>
+
+<h3>Limiting QuerySets — топ-3 по цене</h3>
+<ul>
+    {% for s in limited_scrap_types %}
+        <li>{{ s.title }} — {{ s.price_per_kg }} руб./кг</li>
+    {% endfor %}
+</ul>
+
+<h3>values() — словари</h3>
+<ul>
+    {% for v in values_result %}
+        <li>{{ v.title }}: {{ v.price_per_kg }}</li>
+    {% endfor %}
+</ul>
+
+<h3>values_list(flat=True) — плоский список</h3>
+<p>{{ values_list_result|join:", " }}</p>
+
+<h3>count() / exists()</h3>
+<p>Всего типов металла: {{ total_scrap_types }}</p>
+<p>Есть ли дороже 1000 руб./кг: {{ has_expensive }}</p>
+
+<hr>
+
+<h3>update() — массовое обновление статуса заявок "new" → "in_progress"</h3>
+{% if updated_count is not None %}
+    <p style="color: green;">Обновлено заявок: {{ updated_count }}</p>
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" name="run_update" class="btn">Выполнить update()</button>
+</form>
+
+<h3>delete() — удаление записей RequestPhoto без файла</h3>
+{% if deleted_count is not None %}
+    <p style="color: green;">Удалено записей: {{ deleted_count }}</p>
+{% endif %}
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" name="run_delete" class="btn" style="background:#dc3545;">Выполнить delete()</button>
+</form>
+{% endblock %}

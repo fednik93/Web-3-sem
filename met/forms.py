@@ -1,6 +1,39 @@
 from django import forms
-from .models import User, Request
+from .models import User, Request, Category, RequestPhoto
+class FeedbackForm(forms.Form):
+    name = forms.CharField(max_length=100, label='Ваше имя')
+    message = forms.CharField(widget=forms.Textarea, label='Сообщение')
+class RequestPhotoForm(forms.ModelForm):
+    class Meta:
+        model = RequestPhoto
+        exclude = ['request_id', 'uploaded_at']  # exclude вместо fields — оставляем всё, кроме служебных полей
 
+
+class CategoryForm(forms.ModelForm):
+    class Meta:
+        model = Category
+        fields = ['title', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
+        }
+        labels = {
+            'title': 'Название категории',
+            'description': 'Описание категории',
+        }
+        help_texts = {
+            'title': 'Например: чёрный металл, цветной металл',
+            'description': 'Кратко опишите, что входит в эту категорию',
+        }
+        error_messages = {
+            'title': {
+                'required': 'Название категории обязательно для заполнения',
+                'max_length': 'Слишком длинное название',
+            },
+        }
+
+    class Media:
+        css = {'all': ('css/category_form.css',)}
+        js = ('js/category_form.js',)
 class RegistrationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput(), label="Подтвердите пароль")
 

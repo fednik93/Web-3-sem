@@ -27,6 +27,11 @@ urlpatterns = [
     path('requests/<int:pk>/', views.request_detail, name='request_detail'),
     path('requests/<int:pk>/edit/', views.request_edit, name='request_edit'),
     path('requests/<int:pk>/delete/', views.request_delete, name='request_delete'),
+    path('orm-demo/', views.orm_demo, name='orm_demo'),
+    path('feedback/', views.feedback, name='feedback'),
+    path('categories/', views.category_list, name='category_list'),
+    path('categories/create/', views.category_create, name='category_create'),
+    path('requests/<int:pk>/photo/', views.request_photo_upload, name='request_photo_upload'),
 
     path('register/', views.register, name='register'),
     path('login/', views.login_view, name='login'),

@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Новая категория{% endblock %}
+
+{% block extra_head %}
+    {{ form.media }}
+{% endblock %}
+
+{% block content %}
+<h2>Новая категория</h2>
+<form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+        <div class="form-field">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+                <small>{{ field.help_text }}</small>
+            {% endif %}
+            {% if field.errors %}
+                <div style="color: red;">{{ field.errors }}</div>
+            {% endif %}
+        </div>
+    {% endfor %}
+    <button type="submit" class="btn">Сохранить</button>
+</form>
+<a href="{% url 'category_list' %}">← Отмена</a>
+{% endblock %}

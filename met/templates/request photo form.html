@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Добавить фото{% endblock %}
+{% block content %}
+<h2>Добавить фото к заявке №{{ request_obj.id }}</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Загрузить</button>
+</form>
+<a href="{% url 'request_detail' request_obj.pk %}">← Назад к заявке</a>
+{% endblock %}
