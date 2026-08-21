@@ -1,27 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Регистрация{% endblock %}
 {% block content %}
 <div class="auth-container">
     <h2>Регистрация в системе</h2>
     <form method="post">
-        {% csrf_token %} <div class="form-field">
+        {% csrf_token %}
+        <div class="form-field">
             <label>ФИО:</label>
             {{ form.fio }}
         </div>
-
         <div class="form-field">
             <label>Телефон:</label>
             {{ form.phone }}
         </div>
-
         <div class="form-field">
             <label>Пароль:</label>
             {{ form.password_hash }}
         </div>
-
         <div class="form-field">
             <label>Подтверждение пароля:</label>
             {{ form.confirm_password }}
         </div>
-
+        {% if form.non_field_errors %}
+            <p style="color: red;">{{ form.non_field_errors }}</p>
+        {% endif %}
         <button type="submit" class="btn">Создать аккаунт</button>
     </form>
     <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войти</a></p>

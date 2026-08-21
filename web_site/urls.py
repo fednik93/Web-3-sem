@@ -20,9 +20,9 @@ from met import views
 from django.conf import settings
 from django.conf.urls.static import static
 urlpatterns = [
+    path('', views.home, name='home'),
     path('admin/', admin.site.urls),
     path('requests/', views.request_list, name='request_list'),
-    path('requests/new-status/', views.new_requests_list, name='new_requests_list'),
     path('requests/create/', views.request_create, name='request_create'),
     path('requests/<int:pk>/', views.request_detail, name='request_detail'),
     path('requests/<int:pk>/edit/', views.request_edit, name='request_edit'),

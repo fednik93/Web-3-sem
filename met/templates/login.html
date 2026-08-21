@@ -1,8 +1,9 @@
-
+{% extends "base.html" %}
+{% block title %}Вход{% endblock %}
 {% block content %}
 <div class="auth-container">
     <h2>Вход для клиентов и менеджеров</h2>
-    
+
     {% if messages %}
         {% for message in messages %}
             <p style="color: red;">{{ message }}</p>
@@ -11,17 +12,14 @@
 
     <form method="post">
         {% csrf_token %}
-        
         <div class="form-field">
             <label for="phone">Номер телефона:</label>
             <input type="text" name="phone" id="phone" placeholder="+7XXXXXXXXXX" required>
         </div>
-
         <div class="form-field">
             <label for="password">Пароль:</label>
             <input type="password" name="password" id="password" required>
         </div>
-
         <button type="submit" class="btn">Войти</button>
     </form>
     <p>Впервые у нас? <a href="{% url 'register' %}">Зарегистрироваться</a></p>

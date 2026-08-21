@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ action }} заявку{% endblock %}
+{% block content %}
+<h2>{{ action }} заявку</h2>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Сохранить</button>
+</form>
+<a href="{% url 'request_list' %}">← Отмена</a>
+{% endblock %}

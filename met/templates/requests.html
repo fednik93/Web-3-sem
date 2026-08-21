@@ -1,5 +1,7 @@
-{% load static %}
+{% extends "base.html" %}
 {% load custom_tags %}
+{% block title %}Список заявок{% endblock %}
+{% block content %}
 
 <p>Вы вошли как: <strong>{% hello_user %}</strong></p>
 <h1>{% site_name %}</h1>
@@ -8,27 +10,34 @@
     <h3>Статистика:</h3>
     <p>
         <strong>Всего заработано:</strong>
-        {# Фильтры default и floatformat:2 — это использование 2х фильтров в цепочке #}
+        {# два фильтра в цепочке: default + floatformat #}
         {{ total_revenue.total_sum__sum|default:"0"|floatformat:2 }} руб.
     </p>
     <p>
-        {# Добавим еще один пример агрегации для наглядности #}
-        <strong>Количество активных заявок:</strong> {{ requests.paginator.count }}
+        <strong>Количество заявок:</strong> {{ requests.paginator.count }}
     </p>
 </div>
 
 <hr>
 
-{# Укажем, что менеджер NewRequestManager работает #}
-<h3>Список новых заявок:</h3>
+<h3>Категории металла:</h3>
+<ul>
+    {% get_all_categories as categories %}
+    {% for c in categories %}
+        <li>{{ c.title }}</li>
+    {% endfor %}
+</ul>
+
+<hr>
+
+<h3>Список заявок:</h3>
 
 <div class="request-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">
     {% for req in requests %}
+        {% with photo=req.requestphoto_set.first %}
         <div class="request-card" style="border: 1px solid #ddd; padding: 10px; width: 300px;">
-
-            {# 1. Демонстрация Pillow (вывод изображения) #}
-            {% if req.photo %}
-                <img src="{{ req.photo.url }}" alt="Фото лома" style="width: 100%; height: 200px; object-fit: cover;">
+            {% if photo.photo %}
+                <img src="{{ photo.photo.url }}" alt="Фото лома" style="width: 100%; height: 200px; object-fit: cover;">
             {% else %}
                 <div style="width: 100%; height: 200px; background: #eee; display: flex; align-items: center; justify-content: center;">
                     Нет фото
@@ -36,18 +45,18 @@
             {% endif %}
 
             <div style="margin-top: 10px;">
-                {# 2. Использование get_absolute_url #}
                 <a href="{{ req.get_absolute_url }}" style="font-weight: bold; text-decoration: none; color: #007bff;">
-                    {# 3. Использование фильтра upper #}
                     {{ req.address|upper }}
                 </a>
-
                 <p>Сумма: {{ req.total_sum|floatformat:2 }} руб.</p>
-
-                {# 4. Использование фильтра capfirst (делает первую букву заглавной) #}
                 <p>Статус: <span class="badge">{{ req.get_status_display|capfirst }}</span></p>
+                <p>
+                    <a href="{% url 'request_edit' req.pk %}">Редактировать</a> |
+                    <a href="{% url 'request_delete' req.pk %}">Удалить</a>
+                </p>
             </div>
         </div>
+        {% endwith %}
     {% empty %}
         <p>Заявок пока нет.</p>
     {% endfor %}
@@ -58,11 +67,10 @@
         {% if requests.has_previous %}
             <a href="?page={{ requests.previous_page_number }}">« Назад</a>
         {% endif %}
-
         <span>Страница {{ requests.number }} из {{ requests.paginator.num_pages }}</span>
-
         {% if requests.has_next %}
             <a href="?page={{ requests.next_page_number }}">Вперед »</a>
         {% endif %}
     </div>
 {% endif %}
+{% endblock %}

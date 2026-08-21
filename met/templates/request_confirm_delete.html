@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Удаление заявки{% endblock %}
+{% block content %}
+<h2>Удалить заявку №{{ request_obj.id }}?</h2>
+<p>{{ request_obj.address }} — {{ request_obj.total_sum }} руб.</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn" style="background:#dc3545;">Да, удалить</button>
+    <a href="{% url 'request_list' %}">Отмена</a>
+</form>
+{% endblock %}

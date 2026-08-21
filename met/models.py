@@ -44,6 +44,10 @@ class ScrapType(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255, verbose_name='Название')
     price_per_kg = models.DecimalField(max_digits=12, decimal_places=2, verbose_name='Цена за кг')
+    reference_url = models.URLField(
+        blank=True,
+        verbose_name='Ссылка на прайс-лист поставщика'
+    )
     category_id = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='Категория')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления цен')
     def __str__(self):
@@ -69,6 +73,11 @@ class Request(models.Model):
     objects = models.Manager()
     new_requests = NewRequestManager()
     scrap_types = models.ManyToManyField(ScrapType, through='RequestItem', verbose_name="Компоненты лома")
+    act_document = models.FileField(
+        upload_to='acts/',
+        null=True, blank=True,
+        verbose_name='Акт приёма-передачи'
+    )
 
     def __str__(self):
         return f"Заявка #{self.id} - {self.address}"

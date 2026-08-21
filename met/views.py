@@ -33,7 +33,8 @@ def request_list(request):
         'requests': requests_page,  # В шаблон отдаем страницу пагинатора
         'total_revenue': total_revenue
     })
-
+def home(request):
+    return redirect('request_list')
 
 def request_detail(request, pk):
     obj = get_object_or_404(Request, pk=pk)

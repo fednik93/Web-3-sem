@@ -22,14 +22,11 @@ class RequestForm(forms.ModelForm):
     class Meta:
         model = Request
         # Поля, которые пользователь заполняет на сайте
-        fields = ['address', 'total_sum']
+        fields = ['address', 'act_document']
 
-        # 1. Meta widgets: кастомизация внешнего вида полей
         widgets = {
-            'address': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Введите адрес объекта демонтажа'
-            }),
+            'address': forms.TextInput(attrs={'class': 'form-control'}),
+            'act_document': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
     # 2. Пример clean_<fieldname>(): валидация конкретного поля
