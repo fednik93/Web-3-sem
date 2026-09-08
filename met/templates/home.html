@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Металлолом-Эксперт — приём и вывоз металлолома{% endblock %}
+{% block content %}
+
+<section class="hero">
+    <h1>Продайте металлолом по честной цене</h1>
+    <p>Выезжаем на объект, взвешиваем при вас и платим сразу на месте — без задержек и посредников.</p>
+    <a href="{% url 'request_create' %}" class="btn" style="margin-top:16px;">Оставить заявку</a>
+    <a href="#prices" class="btn btn-secondary" style="margin-top:16px; background:transparent; color:var(--paper); border-color:var(--steel-500);">Смотреть цены ↓</a>
+
+    <div class="readout">
+        <div class="cell">
+            <div class="value">{{ stats.completed_requests }}</div>
+            <div class="label">Заявок выполнено</div>
+        </div>
+        <div class="cell">
+            <div class="value">{{ stats.scrap_types_count }}</div>
+            <div class="label">Видов металла принимаем</div>
+        </div>
+        <div class="cell">
+            <div class="value">{{ stats.clients_count }}</div>
+            <div class="label">Клиентов уже с нами</div>
+        </div>
+    </div>
+</section>
+
+<!-- Актуальные цены — главный контент страницы -->
+<div class="card" id="prices">
+    <h2>Актуальные цены на металлолом</h2>
+    {% for cat in categories %}
+        <div class="price-category">
+            <h3>{{ cat.title }}</h3>
+            {% with types=cat.scraptype_set.all %}
+                {% if types %}
+                    <table class="data-table">
+                        {% for st in types %}
+                            <tr>
+                                <td>{{ st.title }}</td>
+                                <td class="mono" style="text-align:right; font-weight:600; color:var(--copper-dark);">
+                                    {{ st.price_per_kg }} руб./кг
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </table>
+                {% else %}
+                    <p style="color:var(--steel-500); font-size:.85rem;">Пока нет позиций в этой категории.</p>
+                {% endif %}
+            {% endwith %}
+        </div>
+    {% empty %}
+        <p style="color:var(--steel-500);">Прайс-лист пока не заполнен.</p>
+    {% endfor %}
+    <p style="font-size:.8rem; color:var(--steel-500); margin-top:14px;">
+        Цены актуальны на сегодня и могут отличаться в зависимости от объёма и состояния лома.
+    </p>
+</div>
+
+<!-- Как это работает -->
+<div class="card">
+    <h2>Как это работает</h2>
+    <div class="steps">
+        <div class="step">
+            <div class="step-num">1</div>
+            <h3>Оставляете заявку</h3>
+            <p>Указываете адрес — мы перезвоним в течение 15 минут для уточнения деталей.</p>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <h3>Взвешиваем на месте</h3>
+            <p>Приезжаем в удобное время, взвешиваем лом прямо при вас — без "своих" гирь.</p>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <h3>Платим сразу</h3>
+            <p>Расчёт наличными или переводом в момент вывоза — никаких ожиданий.</p>
+        </div>
+    </div>
+</div>
+
+<!-- Почему выбирают нас -->
+<div class="card">
+    <h2>Почему выбирают нас</h2>
+    <div class="trust-grid">
+        <div class="trust-item">
+            <span class="icon">⚖️</span>
+            <div><h3>Честное взвешивание</h3><p>Весы поверены, результат виден клиенту.</p></div>
+        </div>
+        <div class="trust-item">
+            <span class="icon">💰</span>
+            <div><h3>Оплата в день вывоза</h3><p>Без отсрочек и "приедем на следующей неделе".</p></div>
+        </div>
+        <div class="trust-item">
+            <span class="icon">🚛</span>
+            <div><h3>Бесплатный вывоз</h3><p>При объёме от 100 кг — вывозим за свой счёт.</p></div>
+        </div>
+        <div class="trust-item">
+            <span class="icon">📅</span>
+            <div><h3>Без выходных</h3><p>Принимаем заявки и выезжаем каждый день.</p></div>
+        </div>
+    </div>
+</div>
+
+<div class="widgets-grid">
+
+    <!-- Обезличенная лента активности -->
+    <div class="card">
+        <h2>Недавно у нас</h2>
+        {% for item in recent_activity %}
+            <div class="activity-item">
+                <span class="street">{{ item.street }}</span>
+                <span>
+                    <span class="badge badge-{{ item.status }}">{{ item.status_display }}</span>
+                    <span class="when">{{ item.created_at|date:"d.m" }}</span>
+                </span>
+            </div>
+        {% empty %}
+            <p style="color:var(--steel-500);">Пока нет активности.</p>
+        {% endfor %}
+    </div>
+
+    <!-- Поиск своей заявки — только для вошедших -->
+    <div class="card">
+        <h2>Найти свою заявку</h2>
+        {% if current_user %}
+            <form method="get" action="{% url 'home' %}#prices" style="display:flex; gap:10px;">
+                <input type="text" name="q" value="{{ search_query }}" placeholder="Улица из вашей заявки">
+                <button type="submit" class="btn btn-sm">Найти</button>
+            </form>
+            {% if search_query %}
+                {% if search_results %}
+                    {% for r in search_results %}
+                        <div class="list-row">
+                            <a href="{{ r.get_absolute_url }}">{{ r.address }}</a>
+                            <span class="badge badge-{{ r.status }}">{{ r.get_status_display }}</span>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p style="color:var(--steel-500); margin-top:10px;">Ничего не найдено.</p>
+                {% endif %}
+            {% endif %}
+        {% else %}
+            <p style="color:var(--steel-500);">
+                <a href="{% url 'login' %}">Войдите</a>, чтобы найти и отследить свою заявку.
+            </p>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="cta-banner">
+    <h2>Готовы сдать лом?</h2>
+    <p>Оставьте заявку — перезвоним и согласуем время выезда в течение 15 минут.</p>
+    <a href="{% url 'request_create' %}" class="btn">Оставить заявку</a>
+</div>
+
+{% endblock %}

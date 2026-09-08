@@ -1,31 +1,180 @@
 {% extends "base.html" %}
 {% block title %}Заявка №{{ request_obj.id }}{% endblock %}
 {% block content %}
-<div class="request-detail">
-    <h2>Заявка №{{ request_obj.id }}</h2>
-    <p><strong>Адрес:</strong> {{ request_obj.address|upper }}</p>
-    <p><strong>Статус:</strong> {{ request_obj.get_status_display }}</p>
-    <p><strong>Сумма:</strong> {{ request_obj.total_sum|floatformat:2 }} руб.</p>
 
-    {% with photos=request_obj.requestphoto_set.all %}
-        {% if photos %}
-            <div class="photo-box">
-                <p>Фото объекта:</p>
-                {% for p in photos %}
-                    {% if p.photo %}
-                        <img src="{{ p.photo.url }}" alt="Металлолом" style="max-width: 300px; margin-right: 10px;">
-                    {% endif %}
+<div class="no-print" style="margin-bottom:16px; display:flex; justify-content:flex-end;">
+    <button type="button" class="btn btn-secondary" onclick="window.print()">🖨 Печать / Сохранить в PDF</button>
+</div>
+
+<div class="ticket">
+    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:14px;">
+        <div>
+            <h1 style="margin-bottom:4px;">Заявка <span class="mono">№{{ request_obj.id }}</span></h1>
+            <p style="color:var(--steel-500); font-size:.9rem;">
+                Подана {{ request_obj.created_at|date:"d.m.Y H:i" }} &middot;
+                обновлена {{ request_obj.updated_at|date:"d.m.Y H:i" }}
+            </p>
+        </div>
+        <span class="stamp badge-{{ request_obj.status }}" style="color:
+            {% if request_obj.status == 'completed' %}var(--safety-green)
+            {% elif request_obj.status == 'cancelled' %}var(--hazard-red)
+            {% elif request_obj.status == 'in_progress' %}#8a6d1c
+            {% else %}var(--steel-700){% endif %};">
+            {{ request_obj.get_status_display }}
+        </span>
+    </div>
+
+    {% if current_user and current_user.role_id.name|lower == 'менеджер' %}
+        <form method="post" class="no-print" style="margin-top:12px; display:flex; gap:10px; align-items:center;">
+            {% csrf_token %}
+            <select name="status" class="mono" style="width:auto; padding:6px 10px;">
+                {% for value, label in status_choices %}
+                    <option value="{{ value }}" {% if value == request_obj.status %}selected{% endif %}>{{ label }}</option>
                 {% endfor %}
-            </div>
-        {% endif %}
+            </select>
+            <button type="submit" name="change_status" class="btn btn-sm">Изменить статус</button>
+        </form>
+    {% endif %}
+
+    <hr style="border:none; border-top:1px solid var(--paper-line); margin:20px 0;">
+
+    <div class="widgets-grid" style="margin-bottom:20px;">
+        <div>
+            <h3 style="font-size:.85rem; color:var(--steel-500); margin-bottom:6px;">Адрес объекта</h3>
+            <p style="font-size:1.05rem;">{{ request_obj.address }}</p>
+        </div>
+        <div>
+            <h3 style="font-size:.85rem; color:var(--steel-500); margin-bottom:6px;">Клиент</h3>
+            <p style="font-size:1.05rem;">
+                {{ request_obj.user_id.fio }}<br>
+                <span class="mono" style="color:var(--steel-500); font-size:.9rem;">{{ request_obj.user_id.phone }}</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Позиции лома (RequestItem — связанная таблица через M2M/through) -->
+    <h3 style="font-size:.9rem; color:var(--steel-500);">Состав лома</h3>
+    {% with items=request_obj.requestitem_set.all %}
+    {% if items %}
+        <table class="data-table">
+            <tr>
+                <th>Тип металла</th>
+                <th>Вес, кг</th>
+                <th>Цена/кг</th>
+                <th>Сумма</th>
+                <th class="no-print"></th>
+            </tr>
+            {% for item in items %}
+            <tr>
+                <td>{{ item.scrap_type.title }}</td>
+                <td class="mono">{{ item.weight }}</td>
+                <td class="mono">{{ item.scrap_type.price_per_kg }} руб.</td>
+                <td class="mono">{{ item.subtotal|floatformat:2 }} руб.</td>
+                <td class="no-print" style="text-align:right;">
+                    <form method="post" action="{% url 'request_item_delete' request_obj.pk item.pk %}" onsubmit="return confirm('Удалить позицию?');" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-icon" title="Удалить позицию">✕</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    {% else %}
+        <p style="color:var(--steel-500);">Состав лома пока не указан.</p>
+    {% endif %}
     {% endwith %}
 
-    <p>
-        <a href="{% url 'request_edit' request_obj.pk %}">Редактировать</a> |
-        <a href="{% url 'request_delete' request_obj.pk %}">Удалить</a>
-    </p>
+    <!-- Услуги (Request_services — вторая связанная таблица) -->
+    {% with services=request_obj.request_services_set.all %}
+    {% if services %}
+        <h3 style="font-size:.9rem; color:var(--steel-500); margin-top:20px;">Дополнительные услуги</h3>
+        <ul>
+            {% for rs in services %}
+                <li style="display:flex; justify-content:space-between; align-items:center; max-width:400px;">
+                    <span>{{ rs.services_id.service_name }} — <span class="mono">{{ rs.services_id.base_price }} руб.</span></span>
+                    <form method="post" action="{% url 'request_service_delete' request_obj.pk rs.pk %}" onsubmit="return confirm('Удалить услугу?');" class="no-print" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn-icon" title="Удалить услугу">✕</button>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+    {% endwith %}
 
-    <hr>
-    <a href="{% url 'request_list' %}">← Вернуться к списку</a>
+    <hr style="border:none; border-top:1px solid var(--paper-line); margin:20px 0;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <span style="font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.5px; color:var(--steel-500);">Итого к оплате</span>
+        <span class="total-line">{{ request_obj.total_sum|floatformat:2 }} руб.</span>
+    </div>
 </div>
+
+<!-- Добавление состава лома и услуг — прямо на странице заявки, без перехода -->
+<div class="widgets-grid no-print">
+    <div class="card">
+        <h2>Добавить тип металла</h2>
+        {% if messages %}
+            {% for m in messages %}<div class="alert alert-success" role="alert">{{ m }}</div>{% endfor %}
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {% for field in item_form %}
+                <div class="form-field">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <button type="submit" name="add_item" class="btn btn-sm">Добавить</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <h2>Добавить услугу</h2>
+        <form method="post">
+            {% csrf_token %}
+            {% for field in service_form %}
+                <div class="form-field">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {{ field.errors }}
+                </div>
+            {% endfor %}
+            <button type="submit" name="add_service" class="btn btn-sm">Добавить</button>
+        </form>
+    </div>
+</div>
+
+<!-- Фото объекта -->
+{% with photos=request_obj.requestphoto_set.all %}
+{% if photos %}
+<div class="card">
+    <h2>Фото объекта</h2>
+    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        {% for p in photos %}
+            {% if p.photo %}
+                <img src="{{ p.photo.url }}" alt="Металлолом" style="width:180px; height:140px; object-fit:cover; border-radius:var(--radius); border:1px solid var(--paper-line);">
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endwith %}
+
+<!-- Акт приёма-передачи -->
+{% if request_obj.act_document %}
+<div class="card">
+    <h2>Документы</h2>
+    <a href="{{ request_obj.act_document.url }}" class="btn btn-secondary">📄 Скачать акт приёма-передачи</a>
+</div>
+{% endif %}
+
+<div class="no-print" style="display:flex; gap:12px; margin-top:24px; flex-wrap:wrap;">
+    <a href="{% url 'request_edit' request_obj.pk %}" class="btn">Редактировать</a>
+    <a href="{% url 'request_delete' request_obj.pk %}" class="btn btn-danger">Удалить</a>
+    <a href="{% url 'request_photo_upload' request_obj.pk %}" class="btn btn-secondary">Добавить фото</a>
+    <a href="{% url 'request_list' %}" class="btn btn-secondary">← К списку заявок</a>
+</div>
+
 {% endblock %}

@@ -3,74 +3,64 @@
 {% block title %}Список заявок{% endblock %}
 {% block content %}
 
-<p>Вы вошли как: <strong>{% hello_user %}</strong></p>
-<h1>{% site_name %}</h1>
-
-<div class="stats" style="background: #f4f4f4; padding: 15px; border-radius: 8px;">
-    <h3>Статистика:</h3>
-    <p>
-        <strong>Всего заработано:</strong>
-        {# два фильтра в цепочке: default + floatformat #}
-        {{ total_revenue.total_sum__sum|default:"0"|floatformat:2 }} руб.
-    </p>
-    <p>
-        <strong>Количество заявок:</strong> {{ requests.paginator.count }}
-    </p>
+<div class="card" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+    <div>
+        <p style="margin:0; color:var(--steel-500); font-size:.85rem;">Вы вошли как</p>
+        <p style="margin:0; font-family:'Oswald',sans-serif; font-size:1.1rem;">{% hello_user %}</p>
+    </div>
+    <a href="{% url 'request_create' %}" class="btn">+ Новая заявка</a>
 </div>
 
-<hr>
+<div class="widgets-grid" style="margin-bottom:22px;">
+    <div class="card">
+        <h2>Статистика</h2>
+        <p>Всего заработано: <strong class="mono">{{ total_revenue.total_sum__sum|default:"0"|floatformat:2 }} руб.</strong></p>
+        <p>Заявок: <strong>{{ requests.paginator.count }}</strong></p>
+    </div>
+    <div class="card">
+        <h2>Категории</h2>
+        {% get_all_categories as categories %}
+        <ul style="margin:0; padding-left:18px;">
+            {% for c in categories %}
+                <li>{{ c.title }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
 
-<h3>Категории металла:</h3>
-<ul>
-    {% get_all_categories as categories %}
-    {% for c in categories %}
-        <li>{{ c.title }}</li>
-    {% endfor %}
-</ul>
+<div class="card">
+    <h2>{% if is_manager %}Все заявки{% else %}Мои заявки{% endif %}</h2>
 
-<hr>
-
-<h3>Список заявок:</h3>
-
-<div class="request-grid" style="display: flex; flex-wrap: wrap; gap: 20px;">
     {% for req in requests %}
-        {% with photo=req.requestphoto_set.first %}
-        <div class="request-card" style="border: 1px solid #ddd; padding: 10px; width: 300px;">
-            {% if photo.photo %}
-                <img src="{{ photo.photo.url }}" alt="Фото лома" style="width: 100%; height: 200px; object-fit: cover;">
-            {% else %}
-                <div style="width: 100%; height: 200px; background: #eee; display: flex; align-items: center; justify-content: center;">
-                    Нет фото
+        <div class="list-row">
+            <div>
+                <a href="{{ req.get_absolute_url }}" style="font-weight:600;">{{ req.address }}</a>
+                <span class="badge badge-{{ req.status }}" style="margin-left:8px;">{{ req.get_status_display }}</span>
+                <div class="mono" style="color:var(--steel-500); font-size:.85rem; margin-top:4px;">
+                    {{ req.total_sum|floatformat:2 }} руб.
                 </div>
-            {% endif %}
-
-            <div style="margin-top: 10px;">
-                <a href="{{ req.get_absolute_url }}" style="font-weight: bold; text-decoration: none; color: #007bff;">
-                    {{ req.address|upper }}
-                </a>
-                <p>Сумма: {{ req.total_sum|floatformat:2 }} руб.</p>
-                <p>Статус: <span class="badge">{{ req.get_status_display|capfirst }}</span></p>
-                <p>
-                    <a href="{% url 'request_edit' req.pk %}">Редактировать</a> |
-                    <a href="{% url 'request_delete' req.pk %}">Удалить</a>
-                </p>
+            </div>
+            <div class="actions">
+                <a href="{{ req.get_absolute_url }}" class="btn btn-secondary btn-sm">Открыть</a>
+                <a href="{% url 'request_edit' req.pk %}" class="btn btn-secondary btn-sm">Изменить</a>
+                <a href="{% url 'request_delete' req.pk %}" class="btn btn-danger btn-sm">Удалить</a>
             </div>
         </div>
-        {% endwith %}
     {% empty %}
-        <p>Заявок пока нет.</p>
+        <p style="color:var(--steel-500);">Заявок пока нет.</p>
     {% endfor %}
+
+    {% if requests.has_other_pages %}
+        <div style="margin-top:18px; display:flex; gap:14px; align-items:center;">
+            {% if requests.has_previous %}
+                <a href="?page={{ requests.previous_page_number }}">« Назад</a>
+            {% endif %}
+            <span style="color:var(--steel-500); font-size:.85rem;">Стр. {{ requests.number }} из {{ requests.paginator.num_pages }}</span>
+            {% if requests.has_next %}
+                <a href="?page={{ requests.next_page_number }}">Вперёд »</a>
+            {% endif %}
+        </div>
+    {% endif %}
 </div>
 
-{% if requests.has_other_pages %}
-    <div class="pagination" style="margin-top: 20px;">
-        {% if requests.has_previous %}
-            <a href="?page={{ requests.previous_page_number }}">« Назад</a>
-        {% endif %}
-        <span>Страница {{ requests.number }} из {{ requests.paginator.num_pages }}</span>
-        {% if requests.has_next %}
-            <a href="?page={{ requests.next_page_number }}">Вперед »</a>
-        {% endif %}
-    </div>
-{% endif %}
 {% endblock %}

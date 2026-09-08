@@ -1,11 +1,24 @@
 {% extends "base.html" %}
 {% block title %}{{ action }} заявку{% endblock %}
 {% block content %}
-<h2>{{ action }} заявку</h2>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" class="btn">Сохранить</button>
-</form>
-<a href="{% url 'request_list' %}">← Отмена</a>
+
+<div class="card" style="max-width:520px; margin:0 auto;">
+    <h2>{{ action }} заявку</h2>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {% for field in form %}
+            <div class="form-field">
+                {{ field.label_tag }}
+                {{ field }}
+                {% if field.help_text %}<small class="help">{{ field.help_text }}</small>{% endif %}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div style="display:flex; gap:10px; margin-top:8px;">
+            <button type="submit" class="btn">Сохранить</button>
+            <a href="{% url 'request_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
 {% endblock %}

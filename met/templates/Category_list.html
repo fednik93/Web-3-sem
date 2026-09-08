@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Категории{% endblock %}
+{% block content %}
+
+<div class="card">
+    <h2>Категории лома</h2>
+    {% for c in categories %}
+        <div class="list-row">
+            <div>
+                <strong>{{ c.title }}</strong>
+                <div style="color:var(--steel-500); font-size:.9rem;">{{ c.description }}</div>
+            </div>
+        </div>
+    {% empty %}
+        <p style="color:var(--steel-500);">Категорий пока нет.</p>
+    {% endfor %}
+
+    {% if current_user and 'менеджер' in current_user.role_id.name|lower %}
+        <a href="{% url 'category_create' %}" class="btn" style="margin-top:16px;">+ Добавить категорию</a>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,7 +1,8 @@
 from django.db import models
 from django.utils import timezone
 from django.urls import reverse
-
+from django.db.models import F, Sum, DecimalField
+from simple_history.models import HistoricalRecords
 class NewRequestManager(models.Manager):
     def get_queryset(self):
         return super().get_queryset().filter(status='new')
@@ -50,6 +51,7 @@ class ScrapType(models.Model):
     )
     category_id = models.ForeignKey(Category, on_delete=models.PROTECT, verbose_name='Категория')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Дата обновления цен')
+    history = HistoricalRecords()
     def __str__(self):
         return self.title
     class Meta:
@@ -63,12 +65,13 @@ class Request(models.Model):
         ('cancelled', 'Отменена')
     ]
     id = models.AutoField(primary_key=True)
-    user_id = models.ForeignKey(User, on_delete=models.PROTECT, related_name='users', verbose_name='ID пользователя')
+    user_id = models.ForeignKey(User, on_delete=models.PROTECT, related_name='requests', verbose_name='ID пользователя')
     address = models.CharField(max_length=255, verbose_name='Адрес клиента')
     status = models.CharField(max_length=255, choices=statuses, default='new', verbose_name='Статус заказа')
     total_sum = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name='Итоговая сумма')
     created_at = models.DateTimeField(default=timezone.now, verbose_name='Время подачи заявки')
     updated_at = models.DateTimeField(auto_now=True, verbose_name='Время смены статуса заказа')
+    history = HistoricalRecords()
 
     objects = models.Manager()
     new_requests = NewRequestManager()
@@ -79,6 +82,20 @@ class Request(models.Model):
         verbose_name='Акт приёма-передачи'
     )
 
+    def recalculate_total(self):
+        """Пересчитывает total_sum как сумму (вес × цена) по всем позициям лома
+        ПЛЮС стоимость всех подключённых услуг."""
+        items_total = self.requestitem_set.aggregate(
+            total=Sum(F('weight') * F('scrap_type__price_per_kg'),
+                      output_field=DecimalField(max_digits=14, decimal_places=2))
+        )['total'] or 0
+
+        services_total = self.request_services_set.aggregate(
+            total=Sum('services_id__base_price')
+        )['total'] or 0
+
+        self.total_sum = items_total + services_total
+        self.save(update_fields=['total_sum'])
     def __str__(self):
         return f"Заявка #{self.id} - {self.address}"
     class Meta:
@@ -89,6 +106,21 @@ class Request(models.Model):
     def get_absolute_url(self):
         # 'request_detail' — это имя (name) пути из urls.py
         return reverse('request_detail', args=[str(self.id)])
+
+    def recalculate_total(self):
+        """Пересчитывает total_sum как сумму (вес × цена) по всем позициям лома
+        ПЛЮС стоимость всех подключённых услуг."""
+        items_total = self.requestitem_set.aggregate(
+            total=Sum(F('weight') * F('scrap_type__price_per_kg'),
+                      output_field=DecimalField(max_digits=14, decimal_places=2))
+        )['total'] or 0
+
+        services_total = self.request_services_set.aggregate(
+            total=Sum('services_id__base_price')
+        )['total'] or 0
+
+        self.total_sum = items_total + services_total
+        self.save(update_fields=['total_sum'])
 class RequestPhoto(models.Model):
     id = models.AutoField(primary_key=True)
     request_id = models.ForeignKey(Request, on_delete=models.CASCADE, verbose_name='Id запроса')
@@ -125,15 +157,12 @@ class Request_services(models.Model):
 class RequestItem(models.Model):
     request = models.ForeignKey(Request, on_delete=models.CASCADE)
     scrap_type = models.ForeignKey(ScrapType, on_delete=models.CASCADE)
-    weight = models.PositiveIntegerField(verbose_name="Вес в кг")  # Доп. поле!
+    weight = models.PositiveIntegerField(verbose_name="Вес в кг")
 
-    # 3. Использование переопределенного метода save() в модели
+    @property
+    def subtotal(self):
+        return self.weight * self.scrap_type.price_per_kg
+
     def save(self, *args, **kwargs):
-        # Логика: перед сохранением элемента связи можем что-то автоматически посчитать
-        super().save(*args, **kwargs)  # Сначала сохраняем саму запись
-
-        # Например, автоматически обновляем total_sum в родительской заявке
-        parent_request = self.request
-        # Простой пример автоматического расчета (расширить можно через агрегацию)
-        parent_request.total_sum = self.weight * self.scrap_type.price_per_kg
-        parent_request.save()
+        super().save(*args, **kwargs)
+        self.request.recalculate_total()  # теперь учитывает и лом, и услуги

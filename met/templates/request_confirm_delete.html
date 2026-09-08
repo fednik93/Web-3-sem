@@ -1,11 +1,21 @@
 {% extends "base.html" %}
 {% block title %}Удаление заявки{% endblock %}
 {% block content %}
-<h2>Удалить заявку №{{ request_obj.id }}?</h2>
-<p>{{ request_obj.address }} — {{ request_obj.total_sum }} руб.</p>
-<form method="post">
-    {% csrf_token %}
-    <button type="submit" class="btn" style="background:#dc3545;">Да, удалить</button>
-    <a href="{% url 'request_list' %}">Отмена</a>
-</form>
+
+<div class="card" style="max-width:480px; margin:0 auto; border-color:var(--hazard-red);">
+    <h2 style="border-color:var(--hazard-red);">Удалить заявку?</h2>
+    <p>
+        Заявка <strong class="mono">№{{ request_obj.id }}</strong> — {{ request_obj.address }}<br>
+        Сумма: <span class="mono">{{ request_obj.total_sum|floatformat:2 }} руб.</span>
+    </p>
+    <p style="color:var(--hazard-red); font-size:.9rem;">Это действие необратимо.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div style="display:flex; gap:10px; margin-top:14px;">
+            <button type="submit" class="btn btn-danger">Да, удалить</button>
+            <a href="{% url 'request_list' %}" class="btn btn-secondary">Отмена</a>
+        </div>
+    </form>
+</div>
+
 {% endblock %}

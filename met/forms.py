@@ -1,5 +1,18 @@
 from django import forms
-from .models import User, Request, Category, RequestPhoto
+from .models import User, Request, Category, RequestPhoto, RequestItem, Request_services
+
+class RequestItemForm(forms.ModelForm):
+    class Meta:
+        model = RequestItem
+        fields = ['scrap_type', 'weight']
+        labels = {'scrap_type': 'Тип металла', 'weight': 'Вес, кг'}
+
+
+class RequestServiceForm(forms.ModelForm):
+    class Meta:
+        model = Request_services
+        fields = ['services_id']
+        labels = {'services_id': 'Услуга'}
 class FeedbackForm(forms.Form):
     name = forms.CharField(max_length=100, label='Ваше имя')
     message = forms.CharField(widget=forms.Textarea, label='Сообщение')
@@ -33,7 +46,6 @@ class CategoryForm(forms.ModelForm):
 
     class Media:
         css = {'all': ('css/category_form.css',)}
-        js = ('js/category_form.js',)
 class RegistrationForm(forms.ModelForm):
     confirm_password = forms.CharField(widget=forms.PasswordInput(), label="Подтвердите пароль")
 

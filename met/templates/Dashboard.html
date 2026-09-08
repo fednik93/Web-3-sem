@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Статистика{% endblock %}
+{% block content %}
+
+<h1 style="font-size:1.3rem;">Внутренняя статистика</h1>
+<p style="color:var(--steel-500); margin-bottom:24px;">Раздел виден только вошедшим пользователям — сюда вынесена агрегированная отчётность, которую не стоит показывать на публичной странице.</p>
+
+<div class="widgets-grid">
+
+    <div class="card">
+        <h2>Общие показатели</h2>
+        <p>Всего заявок: <strong>{{ agg.total_requests }}</strong></p>
+        <p>Общая выручка: <strong class="mono">{{ agg.total_revenue|default:"0"|floatformat:2 }} руб.</strong></p>
+        <p>Средний чек: <strong class="mono">{{ agg.avg_request_sum|default:"0"|floatformat:2 }} руб.</strong></p>
+        <p style="font-size:.85rem; color:var(--steel-500);">Встречающиеся статусы: {{ used_statuses|join:", " }}</p>
+    </div>
+
+    <div class="card">
+        <h2>Топ клиентов</h2>
+        <p style="font-size:.8rem; color:var(--steel-500); margin-top:-4px;">Группировка по сумме всех заявок клиента (annotate + Sum)</p>
+        <ol style="padding-left:18px;">
+            {% for u in top_clients %}
+                <li style="margin-bottom:8px;">{{ u.fio }} — <span class="mono">{{ u.total_spent|floatformat:2 }} руб.</span></li>
+            {% empty %}
+                <li>Пока нет данных.</li>
+            {% endfor %}
+        </ol>
+    </div>
+
+</div>
+
+{% if featured_category %}
+<div class="card" style="border-left:4px solid var(--brass);">
+    <h2>Приоритетная категория: {{ featured_category.title }}</h2>
+    <p>{{ featured_category.description }}</p>
+</div>
+{% endif %}
+
+{% endblock %}

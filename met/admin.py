@@ -7,10 +7,19 @@ from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from django.http import HttpResponse
-
+from simple_history.admin import SimpleHistoryAdmin
+from import_export.admin import ExportActionModelAdmin
+from import_export import resources
 FONT_PATH = os.path.join(settings.BASE_DIR, 'met', 'static', 'fonts', 'DejaVuSans.ttf')
 pdfmetrics.registerFont(TTFont('DejaVuSans', FONT_PATH))
+class RequestResource(resources.ModelResource):
+    class Meta:
+        model = Request
 
+
+class UserResource(resources.ModelResource):
+    class Meta:
+        model = User
 
 @admin.action(description='Сформировать PDF-акты по выбранным заявкам')
 def generate_pdf_report(modeladmin, request, queryset):
@@ -56,20 +65,20 @@ class RequestServiceInline(admin.TabularInline):
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(ExportActionModelAdmin, admin.ModelAdmin):
     list_display = ('id', 'fio_with_phone', 'role_id', 'created_at', 'updated_at')
     list_display_links = ('id', 'fio_with_phone')
     search_fields = ('fio', 'phone')
     date_hierarchy = 'created_at'
     readonly_fields = ('created_at', 'updated_at')
-
+    resource_classes = [UserResource]
     @admin.display(description='Данные клиента')
     def fio_with_phone(self, obj):
         return f"{obj.fio} - {obj.phone}"
 
 
 @admin.register(Request)
-class RequestAdmin(admin.ModelAdmin):
+class RequestAdmin(ExportActionModelAdmin, SimpleHistoryAdmin):
     list_display = ('id', 'user_id', 'address', 'status', 'total_sum', 'created_at')
     list_display_links = ('user_id', 'status')
     search_fields = ('user__fio', 'address')
@@ -79,10 +88,11 @@ class RequestAdmin(admin.ModelAdmin):
     readonly_fields = ('created_at', 'updated_at')
     inlines = [RequestPhotoInline, RequestServiceInline]
     actions = [generate_pdf_report]
+    resource_classes = [RequestResource]
 
 
 @admin.register(ScrapType)
-class ScrapTypeAdmin(admin.ModelAdmin):
+class ScrapTypeAdmin(SimpleHistoryAdmin):
     list_display = ('title', 'category_id', 'price_per_kg', 'updated_status')
     list_filter = ('category_id',)
     search_fields = ('title',)

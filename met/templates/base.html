@@ -1,33 +1,234 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>{% block title %}Металлолом-Эксперт{% endblock %}</title>
-    {% block extra_head %}{% endblock %}
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }
-        .btn { padding: 10px 20px; background: #28a745; color: white; text-decoration: none; border-radius: 5px; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Металлолом-Эксперт{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --steel-900:#1B1F23;
+  --steel-800:#262B30;
+  --steel-700:#3A414B;
+  --steel-500:#6E7882;
+  --steel-300:#AAB2B9;
+  --paper:#F2EEE3;
+  --paper-card:#FBF9F3;
+  --paper-line:#DAD3C2;
+  --copper:#B5551B;
+  --copper-dark:#8C4114;
+  --brass:#C9A227;
+  --safety-green:#2F7A1F;
+  --hazard-red:#A9362A;
+  --ink:#20242A;
+  --radius:4px;
+}
+*{box-sizing:border-box;}
+body{margin:0;font-family:'Inter',sans-serif;background:var(--paper);color:var(--ink);line-height:1.55;}
+h1,h2,h3{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.5px;color:var(--steel-900);}
+a{color:var(--copper-dark);}
+p{margin:0 0 10px;}
+
+.site-header{background:var(--steel-900);border-bottom:4px solid var(--copper);}
+.brand{font-family:'Oswald',sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  font-size:1.25rem;color:#fff;padding:16px 24px;display:flex;align-items:center;gap:10px;}
+.brand .gear{color:var(--copper);font-size:1.3rem;}
+
+nav.toolbar{display:flex;flex-wrap:wrap;background:var(--steel-800);padding:0 12px;}
+nav.toolbar a{color:var(--steel-300);text-decoration:none;font-family:'Oswald',sans-serif;
+  font-size:.82rem;letter-spacing:.5px;text-transform:uppercase;padding:12px 14px;
+  border-right:1px solid var(--steel-700);transition:background .15s,color .15s;}
+nav.toolbar a:last-child{border-right:none;}
+nav.toolbar a:hover{background:var(--steel-700);color:#fff;}
+
+main{max-width:1080px;margin:0 auto;padding:28px 20px 60px;}
+
+footer{background:var(--steel-900);color:var(--steel-300);text-align:center;padding:18px;font-size:.8rem;margin-top:60px;}
+
+.btn{display:inline-block;font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.5px;
+  font-size:.82rem;padding:10px 20px;border-radius:var(--radius);border:none;cursor:pointer;
+  text-decoration:none;background:var(--copper);color:#fff;transition:background .15s;}
+.btn:hover{background:var(--copper-dark);color:#fff;}
+.btn-secondary{background:transparent;color:var(--steel-700);border:1px solid var(--steel-500);}
+.btn-secondary:hover{background:var(--steel-700);color:#fff;}
+.btn-danger{background:var(--hazard-red);}
+.btn-danger:hover{background:#7d271d;}
+.btn-sm{padding:6px 12px;font-size:.72rem;}
+
+.card{background:var(--paper-card);border:1px solid var(--paper-line);border-radius:var(--radius);
+  padding:22px;margin-bottom:22px;}
+.card h2{margin-top:0;border-bottom:2px solid var(--copper);padding-bottom:10px;font-size:1.05rem;}
+
+.form-field{margin-bottom:16px;}
+.form-field label{display:block;font-family:'Oswald',sans-serif;text-transform:uppercase;
+  font-size:.78rem;letter-spacing:.5px;color:var(--steel-700);margin-bottom:5px;}
+input[type=text],input[type=password],input[type=number],input[type=url],input[type=file],
+textarea,select{
+  width:100%;padding:10px 12px;border:1px solid var(--paper-line);border-radius:var(--radius);
+  font-family:'Inter',sans-serif;font-size:.95rem;background:#fff;color:var(--ink);}
+input:focus,textarea:focus,select:focus{outline:2px solid var(--copper);outline-offset:1px;border-color:var(--copper);}
+.form-field a{word-break:break-all; overflow-wrap:anywhere;}
+.form-field p{word-break:break-all; overflow-wrap:anywhere; font-size:.85rem; color:var(--steel-500);}
+ul.errorlist{color:var(--hazard-red);list-style:none;padding:0;margin:4px 0 0;font-size:.85rem;}
+small.help{color:var(--steel-500);font-size:.8rem;}
+
+.badge{display:inline-block;padding:3px 10px;border-radius:2px;font-family:'Oswald',sans-serif;
+  font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;border:1px solid transparent;}
+.badge-new{background:#eee;color:var(--steel-700);border-color:var(--steel-500);}
+.badge-in_progress{background:#fff3d6;color:#8a6d1c;border-color:var(--brass);}
+.badge-completed{background:#e6f4e0;color:var(--safety-green);border-color:var(--safety-green);}
+.badge-cancelled{background:#f7e3e0;color:var(--hazard-red);border-color:var(--hazard-red);}
+
+.btn-icon{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:28px; height:28px; padding:0; border-radius:var(--radius);
+  border:1px solid var(--hazard-red); background:transparent; color:var(--hazard-red);
+  font-family:'Inter',sans-serif; font-size:1rem; line-height:1; cursor:pointer;
+  transition:background .15s, color .15s;
+}
+.btn-icon:hover{ background:var(--hazard-red); color:#fff; }
+table.data-table td{ vertical-align:middle; }
+
+.ticket{background:var(--paper-card);border:1px solid var(--paper-line);border-radius:var(--radius);
+  padding:26px;border-bottom:3px dashed var(--paper-line);}
+.stamp{display:inline-block;transform:rotate(-4deg);border:2px solid currentColor;padding:4px 14px;
+  font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:1px;font-weight:700;
+  font-size:.85rem;border-radius:3px;}
+.mono{font-family:'JetBrains Mono',monospace;}
+.total-line{font-family:'JetBrains Mono',monospace;font-size:1.7rem;font-weight:700;color:var(--copper-dark);}
+
+table.data-table{width:100%;border-collapse:collapse;margin:10px 0;}
+table.data-table th{text-align:left;font-family:'Oswald',sans-serif;text-transform:uppercase;
+  font-size:.72rem;letter-spacing:.5px;color:var(--steel-500);border-bottom:2px solid var(--paper-line);padding:8px;}
+table.data-table td{padding:10px 8px;border-bottom:1px solid var(--paper-line);}
+table.data-table tr:hover td{background:#f5f2e8;}
+
+.alert{padding:10px 14px;border-radius:var(--radius);margin-bottom:14px;font-size:.9rem;}
+.alert-error{background:#f7e3e0;color:var(--hazard-red);border:1px solid var(--hazard-red);}
+.alert-success{background:#e6f4e0;color:var(--safety-green);border:1px solid var(--safety-green);}
+
+.hero{background:var(--steel-900);color:var(--paper);padding:36px 32px;border-radius:var(--radius);
+  margin-bottom:24px;border-left:6px solid var(--copper);}
+.hero h1{color:#fff;margin:0 0 8px;font-size:1.9rem;}
+.hero p{color:var(--steel-300);margin:0;max-width:520px;}
+
+.readout{display:flex;gap:16px;flex-wrap:wrap;margin-top:22px;}
+.readout .cell{background:var(--steel-800);border:1px solid var(--steel-700);border-radius:var(--radius);
+  padding:14px 20px;min-width:140px;}
+.readout .cell .value{font-family:'JetBrains Mono',monospace;color:#8ce08c;font-size:1.4rem;font-weight:700;}
+.readout .cell .label{font-family:'Oswald',sans-serif;text-transform:uppercase;font-size:.68rem;
+  letter-spacing:.5px;color:var(--steel-300);margin-top:4px;}
+
+.widgets-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;}
+
+.list-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--paper-line);gap:14px;flex-wrap:wrap;}
+.list-row:last-child{border-bottom:none;}
+.list-row .actions a{margin-left:10px;font-size:.8rem;white-space:nowrap;}
+
+/* --- Главная-витрина: шаги, доверие, цены, CTA --- */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:22px;margin:18px 0 6px;}
+.step{text-align:center;padding:6px;}
+.step .step-num{width:42px;height:42px;border-radius:50%;background:var(--copper);color:#fff;
+  display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;
+  font-weight:700;margin:0 auto 10px;}
+.step h3{font-size:.92rem;margin:8px 0 6px;}
+.step p{font-size:.85rem;color:var(--steel-500);margin:0;}
+
+.trust-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;}
+.trust-item{display:flex;gap:12px;align-items:flex-start;padding:14px;background:var(--paper-card);
+  border:1px solid var(--paper-line);border-radius:var(--radius);}
+.trust-item .icon{font-size:1.3rem;line-height:1;}
+.trust-item h3{font-size:.88rem;margin:0 0 4px;}
+.trust-item p{font-size:.82rem;color:var(--steel-500);margin:0;}
+
+.price-category h3{font-family:'Oswald',sans-serif;text-transform:uppercase;letter-spacing:.5px;
+  color:var(--copper-dark);font-size:.92rem;margin:20px 0 8px;border-bottom:1px solid var(--paper-line);
+  padding-bottom:6px;}
+.price-category:first-child h3{margin-top:0;}
+
+.cta-banner{background:linear-gradient(120deg,var(--steel-900),var(--steel-800));color:#fff;
+  border-radius:var(--radius);padding:32px;text-align:center;margin:34px 0 10px;
+  border-left:6px solid var(--copper);}
+.cta-banner h2{color:#fff;margin-bottom:8px;}
+.cta-banner p{color:var(--steel-300);margin-bottom:18px;}
+
+.activity-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;
+  border-bottom:1px solid var(--paper-line);font-size:.9rem;}
+.activity-item:last-child{border-bottom:none;}
+.activity-item .street{color:var(--steel-700);}
+.activity-item .when{color:var(--steel-500);font-size:.78rem;}
+
+/* --- Доступность (accessibility) --- */
+.skip-link{
+  position:absolute; left:-9999px; top:0; z-index:1000;
+  background:var(--copper); color:#fff; padding:12px 20px;
+  font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:.5px;
+  text-decoration:none; border-radius:0 0 var(--radius) 0;
+}
+.skip-link:focus{ left:0; }
+
+.sr-only{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;
+}
+
+/* Явная видимая рамка фокуса для клавиатурной навигации на всех интерактивных элементах */
+a:focus-visible, button:focus-visible, .btn:focus-visible,
+input:focus-visible, textarea:focus-visible, select:focus-visible{
+  outline:3px solid var(--brass);
+  outline-offset:2px;
+}
+nav.toolbar a:focus-visible{ outline-offset:-3px; }
+
+/* --- Печать (@media print) --- */
+@media print{
+  body{ background:#fff; color:#000; }
+  .site-header, nav.toolbar, footer, .skip-link, .no-print{ display:none !important; }
+  main{ max-width:100%; padding:0; margin:0; }
+  .ticket{ border:1px solid #000; box-shadow:none; }
+  .stamp{ border-color:#000 !important; color:#000 !important; }
+  .total-line{ color:#000 !important; }
+  a{ color:#000; text-decoration:none; }
+  .card{ border:1px solid #999; box-shadow:none; }
+  @page{ margin:1.5cm; }
+}
+</style>
+{% block extra_head %}{% endblock %}
 </head>
 <body>
-    <nav>
-        <a href="{% url 'home' %}">Главная</a> |
-        <a href="{% url 'request_create' %}">Создать заявку</a> |
-        <a href="{% url 'register' %}">Регистрация</a> |
-        <a href="{% url 'login' %}">Вход</a> |
-        <a href="{% url 'category_list' %}">Категории</a> |
-        <a href="{% url 'feedback' %}">Обратная связь</a> |
+
+<a href="#main-content" class="skip-link">Перейти к содержимому</a>
+
+<header class="site-header" role="banner">
+    <div class="brand"><span class="gear" aria-hidden="true">⚙</span> Металлолом-Эксперт</div>
+    <nav class="toolbar" aria-label="Основная навигация">
+        <a href="{% url 'home' %}">Главная</a>
+        {% if current_user %}
+            <a href="{% url 'request_list' %}">{% if current_user.role_id.name|lower == 'менеджер' %}Все заявки{% else %}Мои заявки{% endif %}</a>
+        {% endif %}
+        <a href="{% url 'category_list' %}">Цены и категории</a>
+        <a href="{% url 'feedback' %}">Обратная связь</a>
+        {% if current_user %}
+            <a href="{% url 'dashboard' %}">Статистика</a>
+        {% endif %}
         <a href="{% url 'orm_demo' %}">ORM demo</a>
+        {% if current_user %}
+            <span style="margin-left:auto; color:var(--steel-300); font-family:'Oswald',sans-serif; font-size:.82rem; padding:12px 14px; display:flex; align-items:center;">
+                <span aria-hidden="true">👤</span> <span class="sr-only">Вы вошли как</span> {{ current_user.fio }}
+            </span>
+            <a href="{% url 'logout' %}">Выйти</a>
+        {% else %}
+            <a href="{% url 'register' %}" style="margin-left:auto;">Регистрация</a>
+            <a href="{% url 'login' %}">Вход</a>
+        {% endif %}
     </nav>
-    <hr>
+</header>
 
-    <main>
-        {% block content %}
-        {% endblock %}
-    </main>
+<main id="main-content" tabindex="-1">
+    {% block content %}{% endblock %}
+</main>
 
-    <footer style="margin-top: 50px; font-size: 0.8em;">
-        &copy; 2026 Металлолом-Эксперт
-    </footer>
+<footer role="contentinfo">&copy; 2026 Металлолом-Эксперт</footer>
 </body>
 </html>
